@@ -1,4 +1,4 @@
-def label = “pod-worker-${UUID.randomUUID().toString()}”
+def label = "pod-worker-${UUID.randomUUID().toString()}"
 
 podTemplate(label: label,
 
@@ -10,13 +10,13 @@ containers: [
 
   //containerTemplate(name: ‘gradle‘, image: ‘gradle:4.5.1-jdk9′, command: ‘cat’, ttyEnabled: true),
 
-  containerTemplate(name: ‘docker’, image: ‘docker’, command: ‘cat’, ttyEnabled: true),
+  containerTemplate(name: 'docker', image: 'docker', command: 'cat', ttyEnabled: true),
 
-  containerTemplate(name: ‘kubectl‘, image: ‘lachlanevenson/k8s-kubectl:v1.8.8′, command: ‘cat’, ttyEnabled: true),
+  containerTemplate(name: 'kubectl', image: 'lachlanevenson/k8s-kubectl:v1.8.8', command: 'cat', ttyEnabled: true),
 
-  containerTemplate(name: ‘helm’, image: ‘lachlanevenson/k8s-helm:latest’, command: ‘cat’, ttyEnabled: true),
+  containerTemplate(name: 'helm', image: 'lachlanevenson/k8s-helm:latest', command: 'cat', ttyEnabled: true),
 
-  containerTemplate(name: ‘jnlp‘, image: ‘jenkinsci/jnlp-slave:latest’, args: ‘${computer.jnlpmac} ${computer.name}’)
+  containerTemplate(name: 'jnlp', image: 'jenkinsci/jnlp-slave:latest', args: '${computer.jnlpmac} ${computer.name}')
 
 ],
 
@@ -24,7 +24,7 @@ volumes: [
 
   //hostPathVolume(mountPath: ‘/home/gradle/.gradle‘, hostPath: ‘/tmp/jenkins/.gradle‘),
 
-  hostPathVolume(mountPath: ‘/var/run/docker.sock’, hostPath: ‘/var/run/docker.sock’)
+  hostPathVolume(mountPath: '/var/run/docker.sock', hostPath: '/var/run/docker.sock')
 
 ]) {
 
@@ -38,23 +38,23 @@ volumes: [
 
     def shortGitCommit = “${gitCommit[0..10]}”
 
-    def previousGitCommit = sh(script: “git rev-parse ${gitCommit}~”, returnStdout: true)
+    def previousGitCommit = sh(script: 'git rev-parse ${gitCommit}~', returnStdout: true)
 
     
 
-    stage(‘Check running containers’) {
+    stage('Check running containers') {
 
-            container(‘docker’) {
+            container('docker') {
 
                 // example to show you can run docker commands when you mount the socket
 
-                sh ‘hostname‘
+                sh 'hostname'
 
-                sh ‘hostname -i’
+                sh 'hostname -i'
 
-                sh ‘docker ps‘
+                sh 'docker ps'
 
-                sh ‘chmod +x gradlew‘
+                sh 'chmod +x gradlew'
 
                 
 
@@ -62,31 +62,31 @@ volumes: [
 
         }
 
-    stage(‘Build’) {
+    stage('Build') {
 
-      //container(‘gradle‘) {
+      //container(‘gradle') {
 
-      sh ‘chmod +x gradlew‘
+      sh 'chmod +x gradlew'
 
       // sh ‘gradle test’
 
-        sh ‘./gradlew clean build’
+        sh ''./gradlew clean build'
 
      // }
 
     }
 
-    stage(‘Create Docker images’) {
+    stage('Create Docker images') {
 
-      container(‘docker’) {
+      container('docker') {
 
-        withCredentials([[$class: ‘UsernamePasswordMultiBinding’,
+        withCredentials([[$class: 'UsernamePasswordMultiBinding',
 
-          credentialsId: ‘dockerhub‘,
+          credentialsId: 'dockerhub',
 
-          usernameVariable: ‘DOCKER_HUB_USER’,
+          usernameVariable: 'DOCKER_HUB_USER',
 
-          passwordVariable: ‘DOCKER_HUB_PASSWORD’]]) {
+          passwordVariable: 'DOCKER_HUB_PASSWORD']]) {
 
           sh “””
 
@@ -104,21 +104,21 @@ volumes: [
 
     }
 
-    stage(‘Run kubectl‘) {
+    stage('Run kubectl') {
 
-      container(‘kubectl‘) {
+      container('kubectl') {
 
-        sh “kubectl get pods”
+        sh 'kubectl get pods'
 
       }
 
     }
 
-    stage(‘Run helm’) {
+    stage('Run helm') {
 
-      container(‘helm’) {
+      container('helm') {
 
-        sh “helm list”
+        sh 'helm list'
 
       }
 
