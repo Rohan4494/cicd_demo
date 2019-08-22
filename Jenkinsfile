@@ -72,7 +72,7 @@ volumes: [
 
         sh ''./gradlew clean build'
 
-     // }
+      }
 
     }
 
