@@ -1,21 +1,32 @@
-def label = "worker-${UUID.randomUUID().toString()}"
+import jenkins.model.*
+
+def label = "mypod"
 
 podTemplate(label: label, containers: [
+  containerTemplate(name: 'git', image: ‘alpine/git‘, ttyEnabled: true, command: ‘cat’),
+  containerTemplate(name: 'maven', image: ‘maven:3.3.9-jdk-8-alpine’, command: ‘cat’, ttyEnabled: true),
   containerTemplate(name: 'gradle', image: 'gradle:4.5.1-jdk9', command: 'cat', ttyEnabled: true),
   containerTemplate(name: 'docker', image: 'docker', command: 'cat', ttyEnabled: true),
   containerTemplate(name: 'kubectl', image: 'lachlanevenson/k8s-kubectl:v1.8.8', command: 'cat', ttyEnabled: true),
-  containerTemplate(name: 'helm', image: 'lachlanevenson/k8s-helm:latest', command: 'cat', ttyEnabled: true)
+  containerTemplate(name: 'helm', image: 'lachlanevenson/k8s-helm:latest', command: 'cat', ttyEnabled: true),
+  containerTemplate(name: 'jnlp', image: 'jenkinsci/jnlp-slave:latest', args: '${computer.jnlpmac} ${computer.name}')
 ],
 volumes: [
   hostPathVolume(mountPath: '/home/gradle/.gradle', hostPath: '/tmp/jenkins/.gradle'),
   hostPathVolume(mountPath: '/var/run/docker.sock', hostPath: '/var/run/docker.sock')
 ]) {
   node(label) {
-    def myRepo = checkout scm
-    def gitCommit = myRepo.GIT_COMMIT
-    def gitBranch = myRepo.GIT_BRANCH
-    def shortGitCommit = "${gitCommit[0..10]}"
-    def previousGitCommit = sh(script: "git rev-parse ${gitCommit}~", returnStdout: true)
+   def commitId
+   stage ('Extract') {
+      checkout scm
+      commitId = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
+    }
+    
+    // def myRepo = checkout scm
+    // def gitCommit = myRepo.GIT_COMMIT
+    // def gitBranch = myRepo.GIT_BRANCH
+    // // def shortGitCommit = "${gitCommit[0..10]}"
+    // // def previousGitCommit = sh(script: "git rev-parse ${gitCommit}~", returnStdout: true)
  
     stage('Test') {
       try {
@@ -57,7 +68,8 @@ volumes: [
     }
     stage('Run helm') {
       container('helm') {
-        sh "helm list"
+          sh "/helm init --client-only --skip-refresh"
+          sh "/helm upgrade --install --wait --set image.repository=${repository},image.tag=${commitId} hello hello"
       }
     }
   }
