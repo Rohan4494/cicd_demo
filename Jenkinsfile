@@ -3,8 +3,8 @@ import jenkins.model.*
 def label = "mypod"
 
 podTemplate(label: label, containers: [
-  containerTemplate(name: 'git', image: ‘alpine/git‘, ttyEnabled: true, command: ‘cat’),
-  containerTemplate(name: 'maven', image: ‘maven:3.3.9-jdk-8-alpine’, command: ‘cat’, ttyEnabled: true),
+  containerTemplate(name: 'git', image: 'alpine/git', ttyEnabled: true, command: 'cat'),
+  containerTemplate(name: 'maven', image: 'maven:3.3.9-jdk-8-alpine', command: 'cat', ttyEnabled: true),
   containerTemplate(name: 'gradle', image: 'gradle:4.5.1-jdk9', command: 'cat', ttyEnabled: true),
   containerTemplate(name: 'docker', image: 'docker', command: 'cat', ttyEnabled: true),
   containerTemplate(name: 'kubectl', image: 'lachlanevenson/k8s-kubectl:v1.8.8', command: 'cat', ttyEnabled: true),
@@ -16,11 +16,7 @@ volumes: [
   hostPathVolume(mountPath: '/var/run/docker.sock', hostPath: '/var/run/docker.sock')
 ]) {
   node(label) {
-   def commitId
-   stage ('Extract') {
       checkout scm
-      commitId = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
-    }
     
     // def myRepo = checkout scm
     // def gitCommit = myRepo.GIT_COMMIT
